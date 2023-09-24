@@ -33,5 +33,8 @@ uint8_t uart_read_data(uint32_t uartreg);
 void uart_write_data(uint32_t uartreg, uint8_t byte);
 void uart_printf(char *fmt, ...);
 Bool uart_isdata_ready(uint32_t uartreg);
+uint32_t uart_int_stat(uint32_t base_address);
+int8_t uart_error_get(uint32_t base_address);
+void uart_interrupt_enable(void);
 
 #endif /* #ifndef _C66X_UART_H_ */

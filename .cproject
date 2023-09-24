@@ -29,7 +29,7 @@
 								<listOptionValue builtIn="false" value="PRODUCT_MACRO_IMPORTS={&quot;com.ti.rtsc.IPC&quot;:[&quot;${COM_TI_IPC_INCLUDE_PATH}&quot;,&quot;${COM_TI_IPC_LIBRARY_PATH}&quot;,&quot;${COM_TI_IPC_LIBRARIES}&quot;,&quot;${COM_TI_IPC_SYMBOLS}&quot;,&quot;${COM_TI_IPC_SYSCONFIG_MANIFEST}&quot;],&quot;com.ti.pdk.c667x&quot;:[&quot;${COM_TI_PDK_INCLUDE_PATH}&quot;,&quot;${COM_TI_PDK_LIBRARY_PATH}&quot;,&quot;${COM_TI_PDK_LIBRARIES}&quot;,&quot;${COM_TI_PDK_SYMBOLS}&quot;,&quot;${COM_TI_PDK_SYSCONFIG_MANIFEST}&quot;],&quot;com.ti.rtsc.NDK&quot;:[&quot;${COM_TI_NDK_INCLUDE_PATH}&quot;,&quot;${COM_TI_NDK_LIBRARY_PATH}&quot;,&quot;${COM_TI_NDK_LIBRARIES}&quot;,&quot;${COM_TI_NDK_SYMBOLS}&quot;,&quot;${COM_TI_NDK_SYSCONFIG_MANIFEST}&quot;],&quot;com.ti.rtsc.SYSBIOS&quot;:[&quot;${COM_TI_BIOS_INCLUDE_PATH}&quot;,&quot;${COM_TI_BIOS_LIBRARY_PATH}&quot;,&quot;${COM_TI_BIOS_LIBRARIES}&quot;,&quot;${COM_TI_BIOS_SYMBOLS}&quot;,&quot;${COM_TI_BIOS_SYSCONFIG_MANIFEST}&quot;]}"/>
 								<listOptionValue builtIn="false" value="OUTPUT_TYPE=rtscApplication:executable"/>
 								<listOptionValue builtIn="false" value="CCS_MBS_VERSION=5.5.0"/>
-								<listOptionValue builtIn="false" value="PRODUCTS=com.ti.rtsc.NDK:3.61.1.01;com.ti.rtsc.IPC:3.50.4.08;com.ti.rtsc.OMP:1.1.3.02;com.ti.rtsc.SYSBIOS:6.76.3.01;com.ti.pdk.c667x:2.0.16;"/>
+								<listOptionValue builtIn="false" value="PRODUCTS=com.ti.rtsc.NDK:3.61.1.01;com.ti.rtsc.IPC:3.50.4.08;com.ti.rtsc.OMP:1.1.3.02;com.ti.rtsc.SYSBIOS:6.83.0.18;com.ti.pdk.c667x:2.0.16;"/>
 								<listOptionValue builtIn="false" value="RTSC_MBS_VERSION=2.2.0"/>
 							</option>
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.924966666" name="Compiler version" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION" value="8.3.12" valueType="string"/>
@@ -75,6 +75,8 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.OUTPUT_FILE.2120906650" name="Specify output file name (--output_file, -o)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.OUTPUT_FILE" value="${ProjName}.out" valueType="string"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.LIBRARY.485350045" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.LIBRARY" valueType="libs">
 									<listOptionValue builtIn="false" value="${COM_TI_NDK_LIBRARIES}"/>
+									<listOptionValue builtIn="false" value="${COM_TI_PDK_INSTALL_DIR}/packages/ti/csl/lib/c6678/c66/release/ti.csl.ae66"/>
+									<listOptionValue builtIn="false" value="${COM_TI_PDK_INSTALL_DIR}/packages/ti/csl/lib/c6678/c66/release/ti.csl.intc.ae66"/>
 									<listOptionValue builtIn="false" value="${COM_TI_IPC_LIBRARIES}"/>
 									<listOptionValue builtIn="false" value="${COM_TI_BIOS_LIBRARIES}"/>
 									<listOptionValue builtIn="false" value="${COM_TI_PDK_LIBRARIES}"/>
@@ -91,6 +93,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.DIAG_WRAP.88482031" name="Wrap diagnostic messages (--diag_wrap)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.DIAG_WRAP" value="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.DIAG_WRAP.off" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.DISPLAY_ERROR_NUMBER.329415441" name="Emit diagnostic identifier numbers (--display_error_number)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.DISPLAY_ERROR_NUMBER" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.XML_LINK_INFO.996659010" name="Detailed link information data-base into &lt;file&gt; (--xml_link_info, -xml_link_info)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.XML_LINK_INFO" value="&quot;${ProjName}_linkInfo.xml&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.MULTITHREAD.712555714" name="Multi-threading is used; choose thread-safe RTS library (--multithread)" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.linkerID.MULTITHREAD" value="false" valueType="boolean"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__CMD_SRCS.721717047" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__CMD_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__CMD2_SRCS.1952112527" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__CMD2_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__GEN_CMDS.1228636388" name="Generated Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C6000_8.3.exeLinker.inputType__GEN_CMDS"/>
@@ -117,7 +120,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -216,7 +219,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

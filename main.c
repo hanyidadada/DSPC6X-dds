@@ -16,15 +16,10 @@
 /* BIOS6 include */
 #include <ti/sysbios/BIOS.h>
 #include <ti/sysbios/knl/Task.h>
+// c66 hwi module is compatible with c64p
 
-/* csl include */
-#include <ti/csl/csl_psc.h>
-#include <ti/csl/csl_pscAux.h>
-#include <ti/csl/csl_chipAux.h>
-#include <ti/csl/csl_bootcfgAux.h>
-#include <ti/csl/csl_cacheAux.h>
 
-/* USER include */
+#include "peripherInit.h"
 #include "core/net_trans.h"
 
 /**
@@ -44,30 +39,12 @@ int main(void)
     Task_Handle task;
     Error_Block eb;
     Task_Params TaskParams;
+//    char tips_strings[] = {"\r\ntl-uart-echo Application\r\n"};
 
-    /*
-     * Set L2 cache size as 64KB
-     * equivalent to the l2Mode configuration in the Platform.xdc file
-     */
-    CACHE_setL2Size(CACHE_64KCACHE);
-
-    /* Start TCSL so its free running */
-    CSL_chipWriteTSCL(0);
-
-    /* Enable the PSC */
-    psc_init();
-
-    /* Unlock the chip configuration registers */
-    CSL_BootCfgUnlockKicker();
-
-    /* initialize the sgmii network subsystem */
-    init_sgmii(0);
-    init_sgmii(1);
-
-    if(queue_manager_init() != 0)
+    if(PeripherInit() != 0) {
+        printf("PeripherInit error!\n");
         return -1;
-    /* Lock the chip configuration registers */
-    CSL_BootCfgLockKicker();
+    }
 
     /* Variable initialization */
     Error_init(&eb);

@@ -1,2 +1,5 @@
 Debug/*
 .settings/*
+.config/*
+.launches/*
+src/*

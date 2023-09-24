@@ -803,7 +803,7 @@ static void NetworkIPAddr(uint32_t IPAddr, uint32_t IfIdx, uint32_t fAdd)
     if(fAdd && !fAddGroups) {
         fAddGroups = 1;
     }
-    (void) TaskCreate(Trans_Worker, "TransWorker", OS_TASKPRIHIGH, 0x1400, 0, 0, 0);
+    (void) TaskCreate(Trans_Worker, "TransWorker", OS_TASKPRIHIGH, 0x2800, 0, 0, 0);
 #ifdef TCP_CLIENT
     (void) TaskCreate(TCP_perform_send, "TCPBenchmarkTX", OS_TASKPRIHIGH, 0x1400, 0, 0, 0 );
 #endif

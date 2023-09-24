@@ -277,3 +277,67 @@ Bool uart_isdata_ready(uint32_t base_address)
     return status;
 }
 
+/**
+ * @brief This function reads the UART interrupt status
+ *
+ * @param base_address uart register base address
+ *
+ * @return UART interrupt status
+ */
+uint32_t uart_int_stat(uint32_t base_address)
+{
+    CSL_UartRegs *uart_reg = (CSL_UartRegs *)base_address;
+    uint32_t iir_val = 0;
+
+    /* Read the interrupt identification register */
+    iir_val =  uart_reg->IIR;
+
+    iir_val &= CSL_UART_IIR_INITD_MASK;
+    iir_val >>= CSL_UART_IIR_INITD_SHIFT;
+
+    return iir_val;
+}
+
+/**
+ * @brief This function gets the uart error status
+ *
+ * @param base_address uart register base address
+ *
+ * @return receive status
+ *     @retval -1 OE error
+ *     @retval -2 PE error
+ *     @retval -3 FE error
+ *     @retval -4 BI error
+ *     @retval 0 no error
+ */
+int8_t uart_error_get(uint32_t base_address)
+{
+    CSL_UartRegs *uart_reg = (CSL_UartRegs *)base_address;
+
+    if(uart_reg->LSR & (1 << CSL_UART_LSR_OE_SHIFT))
+        return -1;
+
+    if(uart_reg->LSR & (1 << CSL_UART_LSR_PE_SHIFT))
+        return -2;
+
+    if(uart_reg->LSR & (1 << CSL_UART_LSR_FE_SHIFT))
+        return -3;
+
+    if(uart_reg->LSR & (1 << CSL_UART_LSR_BI_SHIFT))
+        return -4;
+
+    return 0;
+}
+
+void uart_interrupt_enable(void)
+{
+    CSL_UartRegs *uart_reg = (CSL_UartRegs *)CSL_UART_REGS;
+
+    /* Enable the ERBI and ELSI interrupts */
+    CSL_FINS(uart_reg->IER, \
+            UART_IER_ERBI, CSL_UART_IER_ERBI_ENABLE);
+    CSL_FINS(uart_reg->IER, \
+            UART_IER_ELSI, CSL_UART_IER_ELSI_ENABLE);
+}
+
+

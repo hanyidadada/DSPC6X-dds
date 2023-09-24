@@ -6,8 +6,15 @@
 #include "MQTTPacket.h"
 #include "transport.h"
 #include "MQTTwork.h"
+#include "driver/c66x_uart.h"
 
-int MQTTSubscribeWork(void *arg)
+extern uint8_t rx_flag;
+extern uint8_t uartbuf[100];
+extern uint32_t index;
+extern uint8_t err_flag;
+extern int8_t err_type;
+
+void MQTTSubscribeWork(void *arg)
 {
     fdOpenSession(TaskSelf());
     SOCKET mysock = *(SOCKET *)arg;
@@ -52,38 +59,80 @@ int MQTTSubscribeWork(void *arg)
 
             rc = MQTTDeserialize_publish(&dup, &qos, &retained, &msgid, &receivedTopic,
                     &payload_in, &payloadlen_in, buf, buflen);
-            printf("message arrived %.*s\n", payloadlen_in, payload_in);
+            uart_printf("message arrived %.*s\n", payloadlen_in, payload_in);
         }
     }
 exit:
     printf("Subscribe error!\n");
     fdCloseSession(TaskSelf());
-    return -1;
-
+    return ;
 }
 
-int MQTTPublishWork(void *arg)
+void MQTTPublishWork(void *arg)
 {
     fdOpenSession(TaskSelf());
     SOCKET mysock = *(SOCKET *)arg;
     int len = 0;
-    unsigned char buf[50];
+    unsigned char buf[200];
     int buflen = sizeof(buf);
     MQTTString topicString = MQTTString_initializer;
     char *payload = "mypayload";
     int payloadlen = strlen(payload);
+    uint32_t wait_time;
 
     topicString.cstring = PUBTOPIC;
+    while (1){
+        if(rx_flag != 0){
+            while (1) {
+                if(rx_flag) {
+                    rx_flag = 0;
+                    /*
+                     * wait time set as 1s, base on cpu freq as 1000MHz.
+                     * If no interrupt is triggered within 1s,
+                     * the file transfer is complete.
+                     */
+                    wait_time = 10000;
+                } else {
+                    /* delay 1 cpu cyle */
+                    asm(" nop");
+                    wait_time--;
+                    if(wait_time == 0)
+                        break;
+                }
+                if(err_flag) {
+                    uart_printf("uart transmission error occurred,code: %d\n", err_type);
+                    return ;
+                }
+            }
+            len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)uartbuf, index);
+            if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
+                break;
+            }
+            index = 0;
+        }
+        Task_sleep(10);
+    }
+    uart_printf("Publish error!\n");
+    fdCloseSession(TaskSelf());
+    return ;
+}
+
+void MQTTHeartWork(void *arg)
+{
+    fdOpenSession(TaskSelf());
+    SOCKET mysock = *(SOCKET *)arg;
+    unsigned char buf[50];
+    int buflen = sizeof(buf);
+    int len;
     while(1) {
-        len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+        len = MQTTSerialize_pingreq(buf, buflen);
         if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
             break;
         }
-        Task_sleep(1000);
+        Task_sleep(20000);
     }
-    printf("Publish error!\n");
+    uart_printf("PINREQ TO MQTT SERVER ERROR!\n");
     fdCloseSession(TaskSelf());
-    return -1;
 }
 
 int MQTTWork(void)
@@ -99,11 +148,13 @@ int MQTTWork(void)
 
 	pthread_t subthread;
 	pthread_t pubthread;
+	pthread_t heartthread;
 
 	fdOpenSession(TaskSelf());
 	mysock = transport_open(host, port);
-	if(mysock == INVALID_SOCKET)
-		return -1;
+	if(mysock == INVALID_SOCKET){
+	    goto exit;
+	}
 
 	data.clientID.cstring = "mater node";
 	data.keepAliveInterval = 20;
@@ -121,29 +172,36 @@ int MQTTWork(void)
 
         if (MQTTDeserialize_connack(&sessionPresent, &connack_rc, buf, buflen) != 1 || connack_rc != 0)
         {
-            printf("Unable to connect, return code %d\n", connack_rc);
+            uart_printf("Unable to connect, return code %d\n", connack_rc);
             goto exit;
         }
     }
     else
         goto exit;
-    printf("MQTT:Connect to hostname %s port %d\n", host, port);
+	uart_printf("MQTT:Connect to hostname %s port %d\n", host, port);
 
     rc = pthread_create(&subthread, NULL, (void *(*)(void *))MQTTSubscribeWork, &mysock);
     if (rc != 0) {
-        printf("Suscribe thread create failed!\n");
+        uart_printf("Suscribe thread create failed!\n");
         goto exit;
     }
     rc = pthread_create(&pubthread, NULL, (void *(*)(void *))MQTTPublishWork, &mysock);
     if (rc != 0) {
-        printf("Publish thread create failed!\n");
+        uart_printf("Publish thread create failed!\n");
+        pthread_cancel(subthread);
+        goto exit;
+    }
+    rc = pthread_create(&heartthread, NULL, (void *(*)(void *))MQTTHeartWork, &mysock);
+    if (rc != 0) {
+        uart_printf("Publish thread create failed!\n");
         pthread_cancel(subthread);
         goto exit;
     }
     pthread_join(subthread, NULL);
-    pthread_join(pubthread, NULL);
+//    pthread_join(pubthread, NULL);
+    pthread_join(heartthread, NULL);
 exit:
-    printf("MQTT work exit!\n");
+    uart_printf("MQTT work exit!\n");
 	transport_close(mysock);
 	fdCloseSession(TaskSelf());
 	return 0;
