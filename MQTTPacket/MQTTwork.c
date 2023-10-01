@@ -21,13 +21,18 @@ void MQTTSubscribeWork(void *arg)
     int rc = 0;
     int len = 0;
     int req_qos = 0;
+    int req_qos_a[4] = {0};
     int msgid = 1;
     unsigned char buf[200];
     int buflen = sizeof(buf);
-    MQTTString topicString = MQTTString_initializer;
+    MQTTString topicString2 = MQTTString_initializer;
+    MQTTString topicString[4] = {0};
     /* subscribe */
-    topicString.cstring = SUBTOPIC;
-    len = MQTTSerialize_subscribe(buf, buflen, 0, msgid, 1, &topicString, &req_qos);
+    topicString[0].cstring = UPPERTOPIC;
+    topicString[1].cstring = NODESTATUS;
+    topicString[2].cstring = NODERESULT;
+    topicString[3].cstring = "test/#";
+    len = MQTTSerialize_subscribe(buf, buflen, 0, msgid, 4, topicString, req_qos_a);
 
     transport_sendPacketBuffer(mysock, buf, len);
     if (MQTTPacket_read(buf, buflen, transport_getdata) == SUBACK)  /* wait for suback */
@@ -35,16 +40,18 @@ void MQTTSubscribeWork(void *arg)
         unsigned short submsgid;
         int subcount;
         int granted_qos;
+        int granted_qos_a[4];
 
-        rc = MQTTDeserialize_suback(&submsgid, 1, &subcount, &granted_qos, buf, buflen);
-        if (granted_qos != 0 || rc < 0)
+        rc = MQTTDeserialize_suback(&submsgid, 4, &subcount, granted_qos_a, buf, buflen);
+        if (granted_qos_a[0] != 0 || rc < 0)
         {
-            printf("granted qos != 0, %d\n", granted_qos);
+            printf("granted qos != 0, %d\n", granted_qos_a[0]);
             goto exit;
         }
     }
     else
         goto exit;
+
     while (1) {
         /* transport_getdata() has a built-in 1 second timeout,
         your mileage will vary */
@@ -59,7 +66,7 @@ void MQTTSubscribeWork(void *arg)
 
             rc = MQTTDeserialize_publish(&dup, &qos, &retained, &msgid, &receivedTopic,
                     &payload_in, &payloadlen_in, buf, buflen);
-            uart_printf("message arrived %.*s\n", payloadlen_in, payload_in);
+            uart_printf("message arrived %.*s \ttopic: %.*s\n", payloadlen_in, payload_in, receivedTopic.lenstring.len, receivedTopic.lenstring.data);
         }
     }
 exit:
@@ -67,6 +74,7 @@ exit:
     fdCloseSession(TaskSelf());
     return ;
 }
+
 
 void MQTTPublishWork(void *arg)
 {
@@ -76,11 +84,9 @@ void MQTTPublishWork(void *arg)
     unsigned char buf[200];
     int buflen = sizeof(buf);
     MQTTString topicString = MQTTString_initializer;
-    char *payload = "mypayload";
-    int payloadlen = strlen(payload);
     uint32_t wait_time;
 
-    topicString.cstring = PUBTOPIC;
+    topicString.cstring = MASTERSERIALTOPIC;
     while (1){
         if(rx_flag != 0){
             while (1) {
@@ -116,6 +122,79 @@ void MQTTPublishWork(void *arg)
     fdCloseSession(TaskSelf());
     return ;
 }
+
+void MQTTPublish2Work(void *arg)
+{
+    fdOpenSession(TaskSelf());
+    SOCKET mysock = *(SOCKET *)arg;
+    int len = 0;
+    unsigned char buf[200];
+    int buflen = sizeof(buf);
+    MQTTString topicString = MQTTString_initializer;
+    char *payload = "sensing message test!!";
+    int payloadlen = strlen(payload);
+
+    topicString.cstring = "master/result/sensing";
+    while (1){
+        len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+        if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
+            break;
+        }
+        Task_sleep(1000);
+    }
+    uart_printf("Publish error!\n");
+    fdCloseSession(TaskSelf());
+    return ;
+}
+
+void MQTTPublish3Work(void *arg)
+{
+    fdOpenSession(TaskSelf());
+    SOCKET mysock = *(SOCKET *)arg;
+    int len = 0;
+    unsigned char buf[200];
+    int buflen = sizeof(buf);
+    MQTTString topicString = MQTTString_initializer;
+    char *payload = "attitude message test!!";
+    int payloadlen = strlen(payload);
+
+    topicString.cstring = "master/result/attitude";
+    while (1){
+        len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+        if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
+            break;
+        }
+        Task_sleep(1000);
+    }
+    uart_printf("Publish error!\n");
+    fdCloseSession(TaskSelf());
+    return ;
+}
+
+void MQTTPublish4Work(void *arg)
+{
+    fdOpenSession(TaskSelf());
+    SOCKET mysock = *(SOCKET *)arg;
+    int len = 0;
+    unsigned char buf[200];
+    int buflen = sizeof(buf);
+    MQTTString topicString = MQTTString_initializer;
+    char *payload = "status message test!!";
+    int payloadlen = strlen(payload);
+
+    topicString.cstring = "master/status";
+    while (1){
+        len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+        if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
+            break;
+        }
+        Task_sleep(1000);
+    }
+    uart_printf("Publish error!\n");
+    fdCloseSession(TaskSelf());
+    return ;
+}
+
 
 void MQTTHeartWork(void *arg)
 {
@@ -185,12 +264,33 @@ int MQTTWork(void)
         uart_printf("Suscribe thread create failed!\n");
         goto exit;
     }
+
     rc = pthread_create(&pubthread, NULL, (void *(*)(void *))MQTTPublishWork, &mysock);
     if (rc != 0) {
         uart_printf("Publish thread create failed!\n");
         pthread_cancel(subthread);
         goto exit;
     }
+
+    rc = pthread_create(&pubthread, NULL, (void *(*)(void *))MQTTPublish2Work, &mysock);
+    if (rc != 0) {
+        uart_printf("Publish thread create failed!\n");
+        pthread_cancel(subthread);
+        goto exit;
+    }
+    rc = pthread_create(&pubthread, NULL, (void *(*)(void *))MQTTPublish3Work, &mysock);
+    if (rc != 0) {
+        uart_printf("Publish thread create failed!\n");
+        pthread_cancel(subthread);
+        goto exit;
+    }
+    rc = pthread_create(&pubthread, NULL, (void *(*)(void *))MQTTPublish4Work, &mysock);
+    if (rc != 0) {
+        uart_printf("Publish thread create failed!\n");
+        pthread_cancel(subthread);
+        goto exit;
+    }
+
     rc = pthread_create(&heartthread, NULL, (void *(*)(void *))MQTTHeartWork, &mysock);
     if (rc != 0) {
         uart_printf("Publish thread create failed!\n");
@@ -198,7 +298,7 @@ int MQTTWork(void)
         goto exit;
     }
     pthread_join(subthread, NULL);
-//    pthread_join(pubthread, NULL);
+    pthread_join(pubthread, NULL);
     pthread_join(heartthread, NULL);
 exit:
     uart_printf("MQTT work exit!\n");

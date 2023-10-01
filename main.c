@@ -1,7 +1,7 @@
 /*
  * main.c
  *
- *  Created on: 2023Äê9ÔÂ21ÈÕ
+ *  Created on: 2023ï¿½ï¿½9ï¿½ï¿½21ï¿½ï¿½
  *      Author: hanyi
  */
 
@@ -36,10 +36,9 @@
 
 int main(void)
 {
-    Task_Handle task;
+    Task_Handle ndktask;
     Error_Block eb;
     Task_Params TaskParams;
-//    char tips_strings[] = {"\r\ntl-uart-echo Application\r\n"};
 
     if(PeripherInit() != 0) {
         printf("PeripherInit error!\n");
@@ -55,8 +54,8 @@ int main(void)
     TaskParams.stackSize = 0x8000;
 
     /* create a Task, which is StackTest */
-    task = Task_create((Task_FuncPtr)ndk_init, &TaskParams, &eb);
-    if(task == NULL) {
+    ndktask = Task_create((Task_FuncPtr)ndk_init, &TaskParams, &eb);
+    if(ndktask == NULL) {
         printf("Task_create() failed!\n");
         BIOS_exit(0);
     }
