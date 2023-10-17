@@ -125,7 +125,7 @@ int PeripherInit(void)
     if(queue_manager_init() != 0)
         return -1;
     /* Lock the chip configuration registers */
-    CSL_BootCfgLockKicker();
+//    CSL_BootCfgLockKicker();
 
     uart_init(CSL_UART_REGS);
     /* Get the cpu freq */

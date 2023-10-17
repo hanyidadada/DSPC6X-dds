@@ -21,7 +21,7 @@
 
 #include "peripherInit.h"
 #include "core/net_trans.h"
-
+#include "core/coreipc.h"
 /**
  * @brief main function
  *
@@ -45,6 +45,7 @@ int main(void)
         return -1;
     }
 
+    InitIpc();
     /* Variable initialization */
     Error_init(&eb);
 
@@ -59,7 +60,6 @@ int main(void)
         printf("Task_create() failed!\n");
         BIOS_exit(0);
     }
-
     /* Start the BIOS 6 Scheduler */
     BIOS_start();
 

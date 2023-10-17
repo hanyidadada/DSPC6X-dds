@@ -20,12 +20,12 @@ void MQTTSubscribeWork(void *arg)
     SOCKET mysock = *(SOCKET *)arg;
     int rc = 0;
     int len = 0;
-    int req_qos = 0;
+//    int req_qos = 0;
     int req_qos_a[4] = {0};
     int msgid = 1;
     unsigned char buf[200];
     int buflen = sizeof(buf);
-    MQTTString topicString2 = MQTTString_initializer;
+//    MQTTString topicString2 = MQTTString_initializer;
     MQTTString topicString[4] = {0};
     /* subscribe */
     topicString[0].cstring = UPPERTOPIC;
@@ -39,7 +39,7 @@ void MQTTSubscribeWork(void *arg)
     {
         unsigned short submsgid;
         int subcount;
-        int granted_qos;
+//        int granted_qos;
         int granted_qos_a[4];
 
         rc = MQTTDeserialize_suback(&submsgid, 4, &subcount, granted_qos_a, buf, buflen);
@@ -67,6 +67,10 @@ void MQTTSubscribeWork(void *arg)
             rc = MQTTDeserialize_publish(&dup, &qos, &retained, &msgid, &receivedTopic,
                     &payload_in, &payloadlen_in, buf, buflen);
             uart_printf("message arrived %.*s \ttopic: %.*s\n", payloadlen_in, payload_in, receivedTopic.lenstring.len, receivedTopic.lenstring.data);
+            if (strncmp(receivedTopic.lenstring.data,  "test/control", 12) == 0) {
+                StartCoreIPC(0);
+            }
+            
         }
     }
 exit:
@@ -140,7 +144,7 @@ void MQTTPublish2Work(void *arg)
         if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
             break;
         }
-        Task_sleep(1000);
+        Task_sleep(7000);
     }
     uart_printf("Publish error!\n");
     fdCloseSession(TaskSelf());
@@ -164,7 +168,7 @@ void MQTTPublish3Work(void *arg)
         if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
             break;
         }
-        Task_sleep(1000);
+        Task_sleep(6000);
     }
     uart_printf("Publish error!\n");
     fdCloseSession(TaskSelf());
@@ -188,7 +192,7 @@ void MQTTPublish4Work(void *arg)
         if(transport_sendPacketBuffer(mysock, buf, len) < 0) {
             break;
         }
-        Task_sleep(1000);
+        Task_sleep(5000);
     }
     uart_printf("Publish error!\n");
     fdCloseSession(TaskSelf());
@@ -258,7 +262,6 @@ int MQTTWork(void)
     else
         goto exit;
 	uart_printf("MQTT:Connect to hostname %s port %d\n", host, port);
-
     rc = pthread_create(&subthread, NULL, (void *(*)(void *))MQTTSubscribeWork, &mysock);
     if (rc != 0) {
         uart_printf("Suscribe thread create failed!\n");
@@ -297,13 +300,11 @@ int MQTTWork(void)
         pthread_cancel(subthread);
         goto exit;
     }
-    pthread_join(subthread, NULL);
-    pthread_join(pubthread, NULL);
     pthread_join(heartthread, NULL);
 exit:
     uart_printf("MQTT work exit!\n");
 	transport_close(mysock);
 	fdCloseSession(TaskSelf());
-	return 0;
+	return rc;
 }
 
