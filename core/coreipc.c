@@ -45,7 +45,7 @@
 #include "core/coreipc.h"
 #include "core/multiboot.h"
 char *QueueName[NUM_CORE] = {"CORE0", "CORE1", "CORE2", "CORE3", "CORE4", "CORE5", "CORE6", "CORE7"};
-MessageQ_Handle messageQ = NULL;
+
 
 
 int InitIpc(void)
@@ -103,19 +103,24 @@ int AttachCore(int coreNum)
     return 0;
 }
 
-int MessageCreate(void)
+MessageQ_Handle MessageCreate(int corenum)
 {
-    messageQ = MessageQ_create(QueueName[MultiProc_self()], NULL);
+    MessageQ_Handle messageQ = NULL;
+    messageQ = MessageQ_create(QueueName[corenum], NULL);
     if (messageQ == NULL) {
       System_abort("MessageQ_create failed\n" );
-      return -1;
+      return NULL;
     }
-    return 0;
+    return messageQ;
 }
-
+int registerflag = 0;
 int RegisterMem(int heapid)
 {
-    MessageQ_registerHeap((IHeap_Handle)SharedRegion_getHeap(0), heapid);
+    if (registerflag == 0) {
+        MessageQ_registerHeap((IHeap_Handle)SharedRegion_getHeap(0), heapid);
+        registerflag = 1;
+    }
+
     return 0;
 }
 
@@ -174,14 +179,19 @@ int MessageGet(MessageQ_Handle handle, MessageQ_Msg *msg)
     return status;
 }
 
-void CoreTaskIPC(void)
+unsigned int addr[7] = {0x8101e6a0, 0x8a01e6a0, 0x9301e6a0, 0x9c01e6a0, 0xa501e6a0};
+
+
+void CoreTaskIPC(void *arg)
 {
     CoreMsg *msg;
-    uart_printf("Running IPC function\n");
-    Load_Core_app_Start((unsigned int)0x9001e6a0, 1);
-    AttachCore(1);
+    MessageQ_Handle messageQ = NULL;
+    int corenum = (int)arg;
+    uart_printf("Running IPC %d function\n", corenum);
+    Load_Core_app_Start(addr[corenum - 1], corenum);
+    AttachCore(corenum);
     RegisterMem(0);
-    MessageCreate();
+    messageQ = MessageCreate(corenum);
     uart_printf("Running CREATE\n");
     for (;;) {
         MessageGet(messageQ, (MessageQ_Msg*)&msg);
@@ -193,9 +203,6 @@ void CoreTaskIPC(void)
 
 int StartCoreIPC(int corenum)
 {
-    Task_Params TaskParams;
-    Task_Params_init(&TaskParams);
-    Task_create((Task_FuncPtr)CoreTaskIPC, &TaskParams, NULL);
-//    pthread_create(NULL, NULL, (void *(*)(void *))CoreTaskIPC, &corenum);
+    pthread_create(NULL, NULL, (void *(*)(void *))CoreTaskIPC, (void *)corenum);
     return 0;
 }

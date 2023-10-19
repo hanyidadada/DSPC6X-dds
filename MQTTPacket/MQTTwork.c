@@ -6,6 +6,7 @@
 #include "MQTTPacket.h"
 #include "transport.h"
 #include "MQTTwork.h"
+#include "core/coreipc.h"
 #include "driver/c66x_uart.h"
 
 extern uint8_t rx_flag;
@@ -68,7 +69,9 @@ void MQTTSubscribeWork(void *arg)
                     &payload_in, &payloadlen_in, buf, buflen);
             uart_printf("message arrived %.*s \ttopic: %.*s\n", payloadlen_in, payload_in, receivedTopic.lenstring.len, receivedTopic.lenstring.data);
             if (strncmp(receivedTopic.lenstring.data,  "test/control", 12) == 0) {
-                StartCoreIPC(0);
+                if(payload_in[0] > '0' && payload_in[0] < '8'){
+                    StartCoreIPC(payload_in[0] - '0');
+                }
             }
             
         }

@@ -24,7 +24,7 @@ typedef struct {
 
 int InitIpc(void);
 int AttachCore(int coreNum);
-int MessageCreate(void);
+MessageQ_Handle MessageCreate(int corenum);
 int RegisterMem(int heapid);
 int MessageOpen(int corenum, MessageQ_QueueId *QueueId);
 CoreMsg * MessageAlloc(int headid);
@@ -32,5 +32,5 @@ int MessageFree(MessageQ_Msg msg);
 int MessageGet(MessageQ_Handle handle, MessageQ_Msg *msg);
 int MessagePut(MessageQ_QueueId QueueId, MessageQ_Msg msg);
 int StartCore0IPC(int corenum);
-void CoreTaskIPC(void);
+void CoreTaskIPC(void *arg);
 #endif /* COREMESSAGE_COREIPC_H_ */
