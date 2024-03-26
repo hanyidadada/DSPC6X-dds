@@ -1,7 +1,7 @@
 /*
  * net_trans.c
  *
- *  Created on: 2023Äê9ÔÂ21ÈÕ
+ *  Created on: 2023ï¿½ï¿½9ï¿½ï¿½21ï¿½ï¿½
  *      Author: hanyi
  */
 
@@ -42,8 +42,8 @@
 #include "system/platform.h"
 #include "system/resource_mgr.h"
 #include "core/net_trans.h"
-#include "MQTTPacket/MQTTwork.h"
 
+extern int udptransportwork(void *arg);
 char *VerStr = "\nTCP/UDP Example Client\n";
 
 char *HostName             = "tidsp";
@@ -59,9 +59,8 @@ char *DNSServer            = "0.0.0.0";                 // Used when set to anyt
 static char *TaskName[]  = {"Telnet","HTTP","NAT","DHCPS","DHCPC","DNS"};
 static char *ReportStr[] = {"","Running","Updated","Complete","Fault"};
 static char *StatusStr[] = {"Disabled","Waiting","IPTerm","Failed","Enabled"};
-//extern TransWork_t *Net_Works;
 TransWork_t Net_Works[] = {
-    {(void *(*)(void*)) MQTTWork, "MQTTWork", NULL}
+    {(void *(*)(void*)) udptransportwork, "MQTTWork", NULL}
 };
 
 static void ServiceReport(uint32_t Item, uint32_t Status, uint32_t Report, void * h);
@@ -753,12 +752,28 @@ static void Trans_Worker(void)
     int i;
     pthread_t thread;
     printf("Net Works begain to start\n");
-    for(i = 0; i < len; i++) {
-        printf("%s create.\n",Net_Works[i].name);
-        pthread_create(&thread, NULL,Net_Works[i].func, Net_Works[i].args);
-    }
+    Task_Handle subtask;
+    Error_Block eb;
+    Task_Params subthreadParams;
+    Error_init(&eb);
+    Task_Params_init(&subthreadParams);
+    subthreadParams.stackSize = 0x8000;
+    /* create a Task, which is StackTest */
+    subtask = Task_create((Task_FuncPtr)Net_Works[0].func, &subthreadParams, &eb);
+//    for(i = 0; i < len; i++) {
+//        printf("%s create.\n",Net_Works[i].name);
+//        pthread_create(&thread, NULL,Net_Works[i].func, Net_Works[i].args);
+//    }
 }
 
+//static void IPC_Worker(void)
+//{
+//    int i = 0;
+//    for(i = 1; i < 8; i++) {
+//       pthread_create(NULL, NULL, (void *(*)(void *))Core0IdleTaskIPC, (void *)i);
+//   }
+//
+//}
 
 /* NetworkOpen */
 /* This function is called after the configuration has booted */
@@ -787,14 +802,14 @@ static void NetworkIPAddr(uint32_t IPAddr, uint32_t IfIdx, uint32_t fAdd)
     static uint16_t fAddGroups = 0;
     uint32_t IPTmp;
 
-    if(fAdd) {
-        printf("Network Added: ");
-    } else {
-        printf("Network Removed: ");
-    }
+//    if(fAdd) {
+//        printf("Network Added: ");
+//    } else {
+//        printf("Network Removed: ");
+//    }
 
     /* Print a message */
-    IPTmp = NDK_ntohl(IPAddr);
+    IPTmp = ntohl(IPAddr);
     printf("If-%d:%d.%d.%d.%d\n", IfIdx,
             (uint8_t)(IPTmp>>24)&0xFF, (uint8_t)(IPTmp>>16)&0xFF,
             (uint8_t)(IPTmp>>8)&0xFF, (uint8_t)IPTmp&0xFF );
@@ -803,7 +818,8 @@ static void NetworkIPAddr(uint32_t IPAddr, uint32_t IfIdx, uint32_t fAdd)
     if(fAdd && !fAddGroups) {
         fAddGroups = 1;
     }
-    (void) TaskCreate(Trans_Worker, "TransWorker", OS_TASKPRIHIGH, 0x2800, 0, 0, 0);
+    (void) TaskCreate(Trans_Worker, "TransWorker", OS_TASKPRIHIGH, 0x1400, 0, 0, 0);
+//    (void) TaskCreate(IPC_Worker, "IPCWorker", OS_TASKPRIHIGH, 0x1400, 0, 0, 0);
 #ifdef TCP_CLIENT
     (void) TaskCreate(TCP_perform_send, "TCPBenchmarkTX", OS_TASKPRIHIGH, 0x1400, 0, 0, 0 );
 #endif

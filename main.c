@@ -21,7 +21,6 @@
 
 #include "peripherInit.h"
 #include "core/net_trans.h"
-#include "core/coreipc.h"
 /**
  * @brief main function
  *
@@ -38,28 +37,27 @@ int main(void)
 {
     Task_Handle ndktask;
     Error_Block eb;
-    Task_Params TaskParams;
+    Task_Params ndkTaskParams;
 
     if(PeripherInit() != 0) {
         printf("PeripherInit error!\n");
         return -1;
     }
 
-    InitIpc();
+//    InitIpc();
     /* Variable initialization */
     Error_init(&eb);
 
     /* Task params initialization */
-    Task_Params_init(&TaskParams);
-
-    TaskParams.stackSize = 0x8000;
-
+    Task_Params_init(&ndkTaskParams);
+    ndkTaskParams.stackSize = 0x8000;
     /* create a Task, which is StackTest */
-    ndktask = Task_create((Task_FuncPtr)ndk_init, &TaskParams, &eb);
+    ndktask = Task_create((Task_FuncPtr)ndk_init, &ndkTaskParams, &eb);
     if(ndktask == NULL) {
         printf("Task_create() failed!\n");
         BIOS_exit(0);
     }
+
     /* Start the BIOS 6 Scheduler */
     BIOS_start();
 

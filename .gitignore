@@ -2,5 +2,6 @@ Debug/*
 .settings/*
 .config/*
 .launches/*
+.vescoe/*
 src/*
 /Debug/

@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "coreipc.h": "c"
+        "coreipc.h": "c",
+        "types.h": "c",
+        "tcp_transport_internal.h": "c",
+        "errno.h": "c"
     }
 }
